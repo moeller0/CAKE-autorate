@@ -1,6 +1,10 @@
 #!/bin/bash
+cur_filename="$( readlink -f -- "${0}" )"
+autorate_code_dir="$( dirname -- "${cur_filename}" )"
 
-cake_instances=(/root/cake-autorate/cake-autorate_config*sh)
+
+
+cake_instances=(${autorate_code_dir}/cake-autorate_config*sh)
 
 trap kill_cake_instances INT TERM EXIT
 
@@ -20,7 +24,7 @@ kill_cake_instances()
 
 for cake_instance in "${cake_instances[@]}"
 do
-	/root/cake-autorate/cake-autorate.sh $cake_instance&
+	${autorate_code_dir}/cake-autorate.sh $cake_instance&
 	cake_instance_pids+=($!)
 	cake_instance_list+=(${cake_instance})
 done
