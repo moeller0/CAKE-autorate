@@ -19,6 +19,13 @@ export LC_ALL=C
 
 trap cleanup_and_killall INT TERM EXIT
 
+# get the directory where this script (and its helps reside)
+# and source autorate_functions.sh
+cur_filename="$( readlink -f -- "${0}" )"
+autorate_code_dir="$( dirname -- "${cur_filename}" )"
+. ${autorate_code_dir}/cake-autorate_common_functions.sh
+
+
 cleanup_and_killall()
 {	
 	trap - INT TERM EXIT
@@ -822,8 +829,9 @@ maintain_pingers()
 	# this initiates the pingers and monitors reflector health, rotating reflectors as necessary
 
  	trap '' INT
+
 	trap 'terminate_reflector_maintenance=1' TERM EXIT
-	
+
 	trap 'pause_reflector_maintenance' USR1
 	trap 'pause_maintain_pingers' USR2
 
@@ -848,6 +856,7 @@ maintain_pingers()
 	t_last_reflector_comparison_us=${EPOCHREALTIME/./}	
 
 
+	# load per reflector information
 	for ((reflector=0; reflector<${no_reflectors}; reflector++))
 	do
 		printf '%s' "${pingers_t_start_us}" > ${run_path}/reflector_${reflectors[reflector]//./-}_last_timestamp_us
@@ -862,6 +871,7 @@ maintain_pingers()
 		for ((i=0; i<${reflector_misbehaving_detection_window}; i++)) do reflector_offences[i]=0; done
                 sum_reflector_offences[pinger]=0
         done
+
 
 	start_pingers
 
@@ -988,6 +998,7 @@ maintain_pingers()
 
 	kill_maintain_pingers
 }
+
 
 set_cake_rate()
 {
@@ -1312,6 +1323,7 @@ fi
 rotate_log_file # rotate here to force header prints at top of log file
 
 log_msg "SYSLOG" "Starting cake-autorate with PID: ${BASHPID} and config: ${config_path}"
+
 
 # ${run_path}/ is used to store temporary files
 # it should not exist on startup so if it does exit, else create the directory

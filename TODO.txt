@@ -7,6 +7,8 @@ use `kill -0 $PID` to test whether a kill was successful instead of wait
 
 use a second attempt with `kill -9` if the first kill did not succed.
 
+keep the commandline of started processes around and compared them before kill to reduce the "oops I killed a wrong process" window
+
 
 Try to restructure things:
 
