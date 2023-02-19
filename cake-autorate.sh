@@ -458,54 +458,6 @@ update_max_wire_packet_compensation()
 	printf '%s' "${max_wire_packet_rtt_us}" > ${run_path}/max_wire_packet_rtt_us
 }
 
-concurrent_read_integer()
-{
-	# in the context of a single process that writes to a file and
-	# a separate process that reads from the file, costly calls to 
-	# the external flock binary can be avoided for the reason that
-	# the read either reads in a blank value or the last true value
-	# and so it is possible to just read, test and reread if necessary
-
-	local -n value=${1}
- 	local path=${2}
-
-	for ((read_try=1; read_try<11; read_try++))
-	do
-		read -r value < ${path};
-
-		# Verify value is a positive or negative integer 
-		# 1st capture group (optional): negative sign
-		# 2nd capture group (optional): leading zeros
-		# 3rd capture group (not optional): numeric sequence 
-		if [[ ${value} =~ ^([-])?([0]+)?([0-9]+)$ ]]; then
-
-			# Strip out any leading zeros and employ arithmetic context
-			value=$(( ${BASH_REMATCH[1]}BASH_REMATCH[3] ))
-			true
-			return
-
-		else
-			if ((${debug})); then
-				read -r caller_output< <(caller)
-				log_msg "DEBUG" "concurrent_read_integer() misfire: ${read_try} of 10, with the following particulars:"
-				log_msg "DEBUG" "caller=${caller_output}, value=${value} and path=${path}"
-			fi 
-			sleep_us ${concurrent_read_integer_interval_us}
-			continue
-		fi
-	done
-	
-	if ((${debug})); then
-		read -r caller_output< <(caller)
-		log_msg "ERROR" "If you see this, then please report these messages (ideally with log file)" 
-		log_msg "ERROR" "at the cake-autorate forum of OpenWrt and/or at github.com/lynxthecat/cake-autorate"
-		log_msg "ERROR" "concurrent_read_integer() 10x misfires, with the following particulars:"
-		log_msg "ERROR" "caller=${caller_output}, value=${value} and path=${path}"
-	fi 
-	value=0
-	false
-	return
-}
 
 verify_ifs_up()
 {
