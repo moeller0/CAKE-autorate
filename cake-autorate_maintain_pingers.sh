@@ -432,8 +432,11 @@ printf -v reflector_owd_delta_ewma_delta_thr_us %.0f "${reflector_owd_delta_ewma
 #printf -v sss_compensation_pre_duration_us %.0f "${sss_compensation_pre_duration_ms}e3"
 #printf -v sss_compensation_post_duration_us %.0f "${sss_compensation_post_duration_ms}e3"
 
+# these are also exported from main, maybe do not recalculate them here again?
 ping_response_interval_us=$(( reflector_ping_interval_us / no_pingers ))
 ping_response_interval_ms=$(( ping_response_interval_us / 1000 ))
+
+concurrent_read_integer_interval_us=$((ping_response_interval_us/4)) 
 
 no_reflectors=${#reflectors[@]} 
 

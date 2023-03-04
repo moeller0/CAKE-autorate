@@ -672,7 +672,7 @@ stall_detection_timeout_us=$(( stall_detection_thr * ping_response_interval_us )
 stall_detection_timeout_s=000000${stall_detection_timeout_us}
 stall_detection_timeout_s=$(( 10#${stall_detection_timeout_s::-6})).${stall_detection_timeout_s: -6}
 
-concurrent_read_integer_interval_us=$((ping_response_interval_us/4))
+export concurrent_read_integer_interval_us=$((ping_response_interval_us/4))
 
 dl_shaper_rate_kbps=${base_dl_shaper_rate_kbps}
 ul_shaper_rate_kbps=${base_ul_shaper_rate_kbps}
