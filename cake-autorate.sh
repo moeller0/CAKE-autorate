@@ -474,34 +474,6 @@ verify_ifs_up()
 }
 
 
-
-sleep_us()
-{
-	# calling external sleep binary is slow
-	# bash does have a loadable sleep 
-	# but read's timeout can more portably be exploited and this is apparently even faster anyway
-
-	local sleep_duration_us=${1} # (microseconds)
-	
-	sleep_duration_s=000000${sleep_duration_us}
-	sleep_duration_s=$((10#${sleep_duration_s::-6})).${sleep_duration_s: -6}
-	read -t ${sleep_duration_s} < ${run_path}/sleep_fifo
-}
-
-sleep_remaining_tick_time()
-{
-	# sleeps until the end of the tick duration
-
-	local t_start_us=${1} # (microseconds)
-	local tick_duration_us=${2} # (microseconds)
-
-	sleep_duration_us=$(( ${t_start_us} + ${tick_duration_us} - ${EPOCHREALTIME/./} ))
-	
-        if (( ${sleep_duration_us} > 0 )); then
-		sleep_us ${sleep_duration_us}
-	fi
-}
-
 randomize_array()
 {
 	local -n array=${1}
@@ -693,10 +665,10 @@ done
 printf -v sss_compensation_pre_duration_us %.0f "${sss_compensation_pre_duration_ms}e3"
 printf -v sss_compensation_post_duration_us %.0f "${sss_compensation_post_duration_ms}e3"
 
-export ping_response_interval_us=$(( reflector_ping_interval_us/no_pingers ))
-export ping_response_interval_ms=$(( ping_response_interval_us/1000 ))
+export ping_response_interval_us=$(( reflector_ping_interval_us / no_pingers ))
+export ping_response_interval_ms=$(( ping_response_interval_us / 1000 ))
 
-stall_detection_timeout_us=$(( stall_detection_thr*ping_response_interval_us ))
+stall_detection_timeout_us=$(( stall_detection_thr * ping_response_interval_us ))
 stall_detection_timeout_s=000000${stall_detection_timeout_us}
 stall_detection_timeout_s=$(( 10#${stall_detection_timeout_s::-6})).${stall_detection_timeout_s: -6}
 
@@ -773,11 +745,14 @@ log_msg "DEBUG" "${cur_script_name}: maintain_pingers_pid: ${maintain_pingers_pi
 
 log_msg "INFO" "Started cake-autorate with PID: ${BASHPID} and config: ${config_path}"
 
+orig_IFS=${IFS}
 while true
 do
-	while read -t ${stall_detection_timeout_s} timestamp reflector seq dl_owd_baseline_us dl_owd_us dl_owd_delta_ewma_us dl_owd_delta_us ul_owd_baseline_us ul_owd_us ul_owd_delta_ewma_us ul_owd_delta_us
+	while  IFS=";" read -t ${stall_detection_timeout_s} timestamp reflector seq dl_owd_baseline_us dl_owd_us dl_owd_delta_ewma_us dl_owd_delta_us ul_owd_baseline_us ul_owd_us ul_owd_delta_ewma_us ul_owd_delta_us
 	do 
+		IFS=${orig_IFS}
 		t_start_us=${EPOCHREALTIME/./}
+		#TODO handle empty timestamp
 		if (( (t_start_us - 10#"${timestamp//[.]}")>500000 )); then
 			log_msg "DEBUG" "processed response from [${reflector}] that is > 500ms old. Skipping." 
 			continue
@@ -834,7 +809,7 @@ do
 	# stall handling procedure
 	# PIPESTATUS[0] == 142 corresponds with while loop timeout
 	# i.e. no reflector responses within ${stall_detection_thr} * ${ping_response_interval_us}
-	if (( PIPESTATUS[0] == 142 )); then
+	if [ ${PIPESTATUS[0]} -eq 142 ] ; then
 
 
 		log_msg "DEBUG" "Warning: no reflector response within: ${stall_detection_timeout_s} seconds. Checking for loads."

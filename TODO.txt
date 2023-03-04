@@ -32,4 +32,7 @@ Try to restructure things:
     
 6) move all individual processes to their own files, so that top/htop/ps give meaningful indication what a process does
 
-7) implement command FIFOs back from the main loop to the background processes? Or
+
+7) implement command FIFOs back from the main loop to the background processes?
+
+8) Clean up reporting by separating with ';' explicit deimiters

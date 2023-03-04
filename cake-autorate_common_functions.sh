@@ -187,6 +187,20 @@ kill_and_wait_by_pid_name()
 
 }
 
+sleep_remaining_tick_time()
+{
+	# sleeps until the end of the tick duration
+
+	local t_start_us=${1} # (microseconds)
+	local tick_duration_us=${2} # (microseconds)
+
+	sleep_duration_us=$(( ${t_start_us} + ${tick_duration_us} - ${EPOCHREALTIME/./} ))
+	
+        if (( ${sleep_duration_us} > 0 )); then
+		sleep_us ${sleep_duration_us}
+	fi
+}
+
 sleep_until_next_pinger_time_slot()
 {
 	# wait until next pinger time slot and start pinger in its slot
@@ -211,7 +225,18 @@ sleep_s()
 	read -t ${sleep_duration_s} < ${run_path}/sleep_fifo
 }
 
+sleep_us()
+{
+	# calling external sleep binary is slow
+	# bash does have a loadable sleep 
+	# but read's timeout can more portably be exploited and this is apparently even faster anyway
 
+	local sleep_duration_us=${1} # (microseconds)
+	
+	sleep_duration_s=000000${sleep_duration_us}
+	sleep_duration_s=$((10#${sleep_duration_s::-6})).${sleep_duration_s: -6}
+	read -t ${sleep_duration_s} < ${run_path}/sleep_fifo
+}
 
 # not intended to be called just for documentation purposes
 get_current_time_us()
