@@ -520,7 +520,7 @@ log_msg "DEBUG" "Starting: ${cur_script_name} with PID: ${BASHPID}"
 	
 
 	# Reflector maintenance loop - verifies reflectors have not gone stale and rotates reflectors as necessary
-	while ((terminate_reflector_maintenance == 0))
+	while[ ${(terminate_reflector_maintenance} -eq 0 ]
 	do
 		sleep_s ${reflector_health_check_interval_s}
 
@@ -642,3 +642,5 @@ log_msg "DEBUG" "Starting: ${cur_script_name} with PID: ${BASHPID}"
 
 	kill_maintain_pingers
 #}
+
+#maintain_pingers ${1}

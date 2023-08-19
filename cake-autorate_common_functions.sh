@@ -198,6 +198,8 @@ sleep_remaining_tick_time()
 	
         if (( ${sleep_duration_us} > 0 )); then
 		sleep_us ${sleep_duration_us}
+	else
+	    log_msg "DEBUG" "${FUNCNAME[0]} with PID: ${BASHPID}: sleep_duration_us: ${sleep_duration_us} <= 0"                                                                                                                                                             
 	fi
 }
 
@@ -221,8 +223,22 @@ sleep_s()
 	# but read's timeout can more portably be exploited and this is apparently even faster anyway
 
 	local sleep_duration_s=${1} # (seconds, e.g. 0.5, 1 or 1.5)
+        local sleep_duration_us
 
-	read -t ${sleep_duration_s} < ${run_path}/sleep_fifo
+	if [ -z "${sleep_duration_s}" ] ; then
+	    log_msg "ERROR" "${FUNCNAME[0]} with PID: ${BASHPID}: sleep_duration_s: ${sleep_duration_s} empty..."
+	    return
+	fi
+
+
+	printf -v sleep_duraton_us %.0f "${sleep_duration_s}e6" 
+        
+        if [ "${sleep_duration_us}" != "0" ] ; then
+	    read -t ${sleep_duration_s} < ${run_path}/sleep_fifo
+	else
+	    log_msg "ERROR" "${FUNCNAME[0]} with PID: ${BASHPID}: sleep_duration_s: ${sleep_duration_s}"
+	fi
+
 }
 
 sleep_us()
@@ -235,7 +251,14 @@ sleep_us()
 	
 	sleep_duration_s=000000${sleep_duration_us}
 	sleep_duration_s=$((10#${sleep_duration_s::-6})).${sleep_duration_s: -6}
-	read -t ${sleep_duration_s} < ${run_path}/sleep_fifo
+
+        if [ "${sleep_duration_us}" != "0" ] ; then
+	    read -t ${sleep_duration_s} < ${run_path}/sleep_fifo
+	else
+	    log_msg "ERROR" "${FUNCNAME[0]} with PID: ${BASHPID}: sleep_duration_s: ${sleep_duration_s}; sleep_duration_us: ${sleep_duration_us}"
+	fi
+
+	#read -t ${sleep_duration_s} < ${run_path}/sleep_fifo
 }
 
 # not intended to be called just for documentation purposes
